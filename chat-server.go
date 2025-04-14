@@ -4,7 +4,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net"
 )
@@ -28,9 +27,9 @@ func createServer() {
 		log.Fatal(err)
 	}
 
-	// Continously print data from the connection
+	// Continously echo data from the connection
 	for {
 		msg, _ := bufio.NewReader(connection).ReadString('\n')
-		fmt.Print(string(msg))
+		connection.Write([]byte(msg + "\n"))
 	}
 }
