@@ -20,16 +20,22 @@ func createServer() {
 		log.Fatal(err)
 	}
 
-	// Accept incoming connections
-	connection, err := listener.Accept()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Continously echo data from the connection
+	// Accept all incoming connections
 	for {
-		msg, _ := bufio.NewReader(connection).ReadString('\n')
-		connection.Write([]byte(msg + "\n"))
+		connection, err := listener.Accept()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Handle connections concurrently
+		go handleConnection(connection)
+	}
+}
+
+func handleConnection(connection net.Conn) {
+	for {
+		message, _ := bufio.NewReader(connection).ReadString('\n')
+		connection.Write([]byte(message + "\n"))
 	}
 }
