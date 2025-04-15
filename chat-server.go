@@ -47,6 +47,8 @@ func broadcastMessage(connection net.Conn, connections *[]net.Conn) {
 		// Handle client exits gracefully
 		if err == io.EOF {
 			break
+		} else if err != nil {
+			log.Fatal(err)
 		}
 
 		// Loop through our connections list and forward message
