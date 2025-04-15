@@ -4,6 +4,7 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"net"
 )
@@ -39,8 +40,14 @@ func createServer() {
 
 // Send a client's message to all connected clients
 func broadcastMessage(connection net.Conn, connections *[]net.Conn) {
+	defer connection.Close()
 	for {
-		message, _ := bufio.NewReader(connection).ReadString('\n')
+		message, err := bufio.NewReader(connection).ReadString('\n')
+
+		// Handle client exits gracefully
+		if err == io.EOF {
+			break
+		}
 
 		// Loop through our connections list and forward message
 		for _, element := range *connections {
