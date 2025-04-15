@@ -44,6 +44,10 @@ func broadcastMessage(connection net.Conn, connections *[]net.Conn) {
 
 		// Loop through our connections list and forward message
 		for _, element := range *connections {
+			// Skip sender
+			if element == connection {
+				continue
+			}
 			element.Write([]byte(message + "\n"))
 		}
 	}
