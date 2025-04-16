@@ -31,23 +31,35 @@ func createServer() {
 	for {
 		connection, err := listener.Accept()
 
-		// Promt for username
-		go func() {
-			connection.Write([]byte("Enter username: "))
-			username, _ := bufio.NewReader(connection).ReadString('\n')
-			fmt.Println(strings.TrimSpace(username) + " connected")
-
-			// Store username and relevant socket in our map
-			users[username] = connection
-		}()
-		time.Sleep(time.Second)
-
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		// Handle connections concurrently
-		go broadcastMessage(connection, users)
+		// Promt for username
+		go func() {
+			var username string
+			for {
+				connection.Write([]byte("Enter username: "))
+				username, _ = bufio.NewReader(connection).ReadString('\n')
+
+				_, prs := users[username]
+				if prs {
+					connection.Write([]byte("Username not available, try something else :( \n"))
+					continue
+				}
+				break
+			}
+
+			fmt.Println(strings.TrimSpace(username) + " connected")
+
+			// Store username and relevant socket in our map
+			users[username] = connection
+
+			// Handle connections concurrently
+			broadcastMessage(connection, users)
+		}()
+		time.Sleep(time.Second)
+
 	}
 }
 
