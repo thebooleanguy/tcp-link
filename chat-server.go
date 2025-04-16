@@ -27,6 +27,10 @@ func createServer() {
 	// Accept all incoming connections
 	for {
 		connection, err := listener.Accept()
+
+		// Promt for username
+		connection.Write([]byte("Enter username: "))
+
 		connections = append(connections, connection)
 
 		if err != nil {
