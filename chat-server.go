@@ -4,9 +4,12 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net"
+	"strings"
+	"time"
 )
 
 func main() {
@@ -24,12 +27,20 @@ func createServer() {
 	// A list to keep track of all incoming connections
 	var connections []net.Conn
 
+	// A map to keep track of users
+	// users := make(map[string]net.Conn)
+
 	// Accept all incoming connections
 	for {
 		connection, err := listener.Accept()
 
 		// Promt for username
-		connection.Write([]byte("Enter username: "))
+		go func() {
+			connection.Write([]byte("Enter username: "))
+			username, _ := bufio.NewReader(connection).ReadString('\n')
+			fmt.Println(strings.TrimSpace(username) + " connected")
+		}()
+		time.Sleep(time.Second)
 
 		connections = append(connections, connection)
 
