@@ -24,11 +24,8 @@ func createServer() {
 		log.Fatal(err)
 	}
 
-	// A list to keep track of all incoming connections
-	var connections []net.Conn
-
 	// A map to keep track of users
-	// users := make(map[string]net.Conn)
+	users := make(map[string]net.Conn)
 
 	// Accept all incoming connections
 	for {
@@ -39,22 +36,23 @@ func createServer() {
 			connection.Write([]byte("Enter username: "))
 			username, _ := bufio.NewReader(connection).ReadString('\n')
 			fmt.Println(strings.TrimSpace(username) + " connected")
+
+			// Store username and relevant socket in our map
+			users[username] = connection
 		}()
 		time.Sleep(time.Second)
-
-		connections = append(connections, connection)
 
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// Handle connections concurrently
-		go broadcastMessage(connection, &connections)
+		go broadcastMessage(connection, users)
 	}
 }
 
 // Send a client's message to all connected clients
-func broadcastMessage(connection net.Conn, connections *[]net.Conn) {
+func broadcastMessage(connection net.Conn, users map[string]net.Conn) {
 	defer connection.Close()
 	for {
 		message, err := bufio.NewReader(connection).ReadString('\n')
@@ -67,12 +65,12 @@ func broadcastMessage(connection net.Conn, connections *[]net.Conn) {
 		}
 
 		// Loop through our connections list and forward message
-		for _, element := range *connections {
+		for _, val := range users {
 			// Skip sender
-			if element == connection {
+			if val == connection {
 				continue
 			}
-			element.Write([]byte(message + "\n"))
+			val.Write([]byte(message + "\n"))
 		}
 	}
 }
