@@ -67,7 +67,7 @@ func createServer() {
 			fmt.Println(strings.TrimSpace(username) + " joined lobby")
 
 			// Handle connections concurrently
-			handleConnection(connection, username, users, user_rooms, rooms)
+			handleConnection(connection, username, user_rooms, rooms)
 		}()
 		time.Sleep(time.Second)
 
@@ -75,7 +75,7 @@ func createServer() {
 }
 
 // Handle client upon connection
-func handleConnection(connection net.Conn, username string, users map[string]net.Conn, user_rooms map[string]string, rooms map[string][]net.Conn) {
+func handleConnection(connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
 	defer connection.Close()
 	for {
 		message, err := bufio.NewReader(connection).ReadString('\n')
@@ -92,8 +92,8 @@ func handleConnection(connection net.Conn, username string, users map[string]net
 			parseCommands(message, connection, username, user_rooms, rooms)
 		}
 
-		// Broadcast a client's message to all connected clients
-		for _, val := range users {
+		// Broadcast a client's message to all clients in our room
+		for _, val := range rooms[user_rooms[username]] {
 			// Skip sender
 			if val == connection {
 				continue
