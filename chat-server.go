@@ -27,6 +27,9 @@ func createServer() {
 	// A map to keep track of users
 	users := make(map[string]net.Conn)
 
+	// A map to keep track of rooms and connected users
+	rooms := make(map[string][]string)
+
 	// Accept all incoming connections
 	for {
 		connection, err := listener.Accept()
@@ -50,10 +53,12 @@ func createServer() {
 				break
 			}
 
-			fmt.Println(strings.TrimSpace(username) + " connected")
-
 			// Store username and relevant socket in our map
 			users[username] = connection
+
+			rooms["lobby"] = append(rooms["lobby"], username)
+			fmt.Println(strings.TrimSpace(username) + " joined lobby")
+			fmt.Println(rooms)
 
 			// Handle connections concurrently
 			broadcastMessage(connection, users)
