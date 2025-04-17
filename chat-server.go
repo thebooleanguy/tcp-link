@@ -127,5 +127,7 @@ func parseCommands(message string, connection net.Conn, username string, user_ro
 		user_rooms[username] = new_room
 		rooms[new_room] = append(rooms[new_room], connection)
 		fmt.Println(strings.TrimSpace(username) + " joined " + new_room)
+	} else {
+		connection.Write([]byte("Unknown command: " + command + " :( \n"))
 	}
 }
