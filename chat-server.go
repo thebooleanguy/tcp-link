@@ -32,7 +32,7 @@ func createServer() {
 	// A map to keep track of a user's connected room
 	user_rooms := make(map[string]string)
 
-	// A map to keep track of rooms and connected users
+	// A map to keep track of rooms and connected clients
 	rooms := make(map[string][]net.Conn)
 
 	// Accept all incoming connections
