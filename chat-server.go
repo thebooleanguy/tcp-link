@@ -94,6 +94,10 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 
 		// Broadcast a client's message to all clients in our room
 		for _, val := range rooms[user_rooms[username]] {
+			// Skip commands
+			if message[0] == '/' {
+				break
+			}
 			// Skip sender
 			if val == connection {
 				continue
