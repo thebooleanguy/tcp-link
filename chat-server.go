@@ -58,7 +58,6 @@ func createServer() {
 
 			rooms["lobby"] = append(rooms["lobby"], username)
 			fmt.Println(strings.TrimSpace(username) + " joined lobby")
-			fmt.Println(rooms)
 
 			// Handle connections concurrently
 			broadcastMessage(connection, users)
