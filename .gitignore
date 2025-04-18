@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 chat-server
+chat.db
+go.sum
