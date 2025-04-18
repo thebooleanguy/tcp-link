@@ -4,7 +4,9 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"io"
 	"log"
 	"net"
@@ -14,6 +16,7 @@ import (
 )
 
 func main() {
+	handleDatabase()
 	createServer()
 }
 
@@ -130,4 +133,24 @@ func parseCommands(message string, connection net.Conn, username string, user_ro
 	} else {
 		connection.Write([]byte("Unknown command: " + command + " :( \n"))
 	}
+}
+
+func handleDatabase() {
+
+	db, err := sql.Open("sqlite3", "chat.db")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	// Create table if it does not exist already
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT NOT NULL, username TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	statement.Exec()
 }
