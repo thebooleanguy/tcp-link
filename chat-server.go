@@ -68,9 +68,7 @@ func createServer(sql_driver string, db_name string) {
 			users[username] = connection
 
 			// Add user to lobby upon connection
-			user_rooms[username] = "lobby"
-			rooms["lobby"] = append(rooms["lobby"], connection)
-			fmt.Println(strings.TrimSpace(username) + " joined lobby")
+			joinRoom("lobby", connection, username, user_rooms, rooms)
 
 			// Handle connections concurrently
 			handleConnection(connection, username, user_rooms, rooms, sql_driver, db_name)
