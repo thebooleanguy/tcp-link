@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	handleDatabase()
+	initDatabase()
 	createServer()
 }
 
@@ -119,7 +119,7 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 	}
 }
 
-// Parse and respond to client commands
+// Remove client from its current room and add to another room
 func joinRoom(new_room string, connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
 
 	old_room := user_rooms[username]
@@ -138,7 +138,7 @@ func joinRoom(new_room string, connection net.Conn, username string, user_rooms 
 	// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
 }
 
-func handleDatabase() {
+func initDatabase() {
 
 	db, err := sql.Open("sqlite3", "chat.db")
 
