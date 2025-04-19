@@ -68,7 +68,7 @@ func createServer(sql_driver string, db_name string) {
 			users[username] = connection
 
 			// Add user to lobby upon connection
-			joinRoom("lobby", connection, username, user_rooms, rooms)
+			joinRoom("lobby", connection, username, user_rooms, rooms, sql_driver, db_name)
 
 			// Handle connections concurrently
 			handleConnection(connection, username, user_rooms, rooms, sql_driver, db_name)
@@ -102,7 +102,7 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 			suffix := words[1]
 
 			if command == "/join" {
-				joinRoom(suffix, connection, username, user_rooms, rooms)
+				joinRoom(suffix, connection, username, user_rooms, rooms, sql_driver, db_name)
 			} else {
 				connection.Write([]byte("Unknown command: " + command + " :( \n"))
 			}
@@ -130,7 +130,11 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 }
 
 // Remove client from its current room and add to another room
-func joinRoom(new_room string, connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
+func joinRoom(new_room string, connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn, sql_driver string, db_name string) {
+
+	// Handle database connection
+	db, _ := sql.Open(sql_driver, db_name)
+	defer db.Close()
 
 	old_room := user_rooms[username]
 
@@ -145,7 +149,14 @@ func joinRoom(new_room string, connection net.Conn, username string, user_rooms 
 	user_rooms[username] = new_room
 	rooms[new_room] = append(rooms[new_room], connection)
 	fmt.Println(strings.TrimSpace(username) + " joined " + new_room)
-	// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
+
+	// Read room's last 10 messages from database
+	rows, _ := db.Query("SELECT content FROM messages WHERE room = ? ORDER BY timestamp DESC LIMIT 10", new_room)
+	var temp_msg string
+	for rows.Next() {
+		rows.Scan(&temp_msg)
+		connection.Write([]byte(temp_msg + " \n"))
+	}
 }
 
 // Create database and tables if they do not already exist
