@@ -90,9 +90,17 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 			log.Fatal(err)
 		}
 
-		// Parse client commands
+		// Parse and respond to client commands
 		if message[0] == '/' {
-			parseCommands(message, connection, username, user_rooms, rooms)
+			words := strings.Fields(message)
+			command := words[0]
+			suffix := words[1]
+
+			if command == "/join" {
+				joinRoom(suffix, connection, username, user_rooms, rooms)
+			} else {
+				connection.Write([]byte("Unknown command: " + command + " :( \n"))
+			}
 		}
 
 		// Broadcast a client's message to all clients in our room
@@ -112,30 +120,22 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 }
 
 // Parse and respond to client commands
-func parseCommands(message string, connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
+func joinRoom(new_room string, connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
 
-	words := strings.Fields(message)
-	command := words[0]
-	new_room := words[1]
 	old_room := user_rooms[username]
 
-	if command == "/join" {
-		// TODO Move join to a little sub function from here, so we can reuse it for our lobby as well
-		// Remove user from old room
-		for idx, val := range rooms[old_room] {
-			if val == connection {
-				rooms[old_room] = slices.Delete(rooms[old_room], idx, idx+1)
-				break
-			}
+	// Remove user from old room
+	for idx, val := range rooms[old_room] {
+		if val == connection {
+			rooms[old_room] = slices.Delete(rooms[old_room], idx, idx+1)
+			break
 		}
-		// Add user to new room
-		user_rooms[username] = new_room
-		rooms[new_room] = append(rooms[new_room], connection)
-		fmt.Println(strings.TrimSpace(username) + " joined " + new_room)
-		// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
-	} else {
-		connection.Write([]byte("Unknown command: " + command + " :( \n"))
 	}
+	// Add user to new room
+	user_rooms[username] = new_room
+	rooms[new_room] = append(rooms[new_room], connection)
+	fmt.Println(strings.TrimSpace(username) + " joined " + new_room)
+	// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
 }
 
 func handleDatabase() {
