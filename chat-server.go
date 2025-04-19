@@ -106,6 +106,7 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 				continue
 			}
 			val.Write([]byte(message + "\n"))
+			// TODO Insert SQL Query, Use a WHERE Clause to filter by Room
 		}
 	}
 }
@@ -119,6 +120,7 @@ func parseCommands(message string, connection net.Conn, username string, user_ro
 	old_room := user_rooms[username]
 
 	if command == "/join" {
+		// TODO Move join to a little sub function from here, so we can reuse it for our lobby as well
 		// Remove user from old room
 		for idx, val := range rooms[old_room] {
 			if val == connection {
@@ -130,6 +132,7 @@ func parseCommands(message string, connection net.Conn, username string, user_ro
 		user_rooms[username] = new_room
 		rooms[new_room] = append(rooms[new_room], connection)
 		fmt.Println(strings.TrimSpace(username) + " joined " + new_room)
+		// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
 	} else {
 		connection.Write([]byte("Unknown command: " + command + " :( \n"))
 	}
