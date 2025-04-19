@@ -16,11 +16,14 @@ import (
 )
 
 func main() {
-	initDatabase()
-	createServer()
+	sql_driver := "sqlite3"
+	db_name := "chat.db"
+
+	initDatabase(sql_driver, db_name)
+	createServer(sql_driver, db_name)
 }
 
-func createServer() {
+func createServer(sql_driver string, db_name string) {
 	// Create a TCP Listener interface
 	listener, err := net.Listen("tcp", ":1234")
 
@@ -70,7 +73,7 @@ func createServer() {
 			fmt.Println(strings.TrimSpace(username) + " joined lobby")
 
 			// Handle connections concurrently
-			handleConnection(connection, username, user_rooms, rooms)
+			handleConnection(connection, username, user_rooms, rooms, sql_driver, db_name)
 		}()
 		time.Sleep(time.Second)
 
@@ -78,7 +81,11 @@ func createServer() {
 }
 
 // Handle client upon connection
-func handleConnection(connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn) {
+func handleConnection(connection net.Conn, username string, user_rooms map[string]string, rooms map[string][]net.Conn, sql_driver string, db_name string) {
+	// Handle database connection
+	db, _ := sql.Open(sql_driver, db_name)
+	defer db.Close()
+
 	defer connection.Close()
 	for {
 		message, err := bufio.NewReader(connection).ReadString('\n')
@@ -114,7 +121,12 @@ func handleConnection(connection net.Conn, username string, user_rooms map[strin
 				continue
 			}
 			val.Write([]byte(message + "\n"))
-			// TODO Insert SQL Query, Use a WHERE Clause to filter by Room
+
+		}
+		if message[0] != '/' {
+			// Insert to database
+			statement, _ := db.Prepare("INSERT INTO messages (room, username, content) VALUES (?, ?, ?)")
+			statement.Exec(user_rooms[username], username, message)
 		}
 	}
 }
@@ -138,18 +150,18 @@ func joinRoom(new_room string, connection net.Conn, username string, user_rooms 
 	// TODO Read SQL Query, Use a WHERE clause and LIMIT BY 10
 }
 
-func initDatabase() {
+// Create database and tables if they do not already exist
+func initDatabase(sql_driver string, db_name string) {
 
-	db, err := sql.Open("sqlite3", "chat.db")
-
+	db, err := sql.Open(sql_driver, db_name)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer db.Close()
 
-	// Create table if it does not exist already
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT NOT NULL, username TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
+	// Prepared statemnt to create table if it does not exist already
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT NOT NULL, username TEXT NOT NULL, content TEXT NOT NULL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)")
 
 	if err != nil {
 		log.Fatal(err)
